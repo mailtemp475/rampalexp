@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Edit3, Save, X, Eye } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import RichTextRenderer from './components/RichTextRenderer';
 
 interface Card {
@@ -122,6 +123,8 @@ const initialCards: Card[] = [
 ];
 
 function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [cards, setCards] = useState<Card[]>(initialCards);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [editingCard, setEditingCard] = useState<number | null>(null);
@@ -131,11 +134,15 @@ function App() {
   const handleCardClick = (card: Card) => {
     setSelectedCard(card);
     setEditingCard(null);
+    // Update URL with card ID for proper navigation
+    navigate(`/card/${card.id}`, { replace: false });
   };
 
   const handleBackClick = () => {
     setSelectedCard(null);
     setEditingCard(null);
+    // Navigate back to home
+    navigate('/', { replace: false });
   };
 
   const handleEditStart = (cardId: number) => {
@@ -175,6 +182,22 @@ function App() {
       window.open(url, '_blank');
     }
   };
+
+  // Handle browser back button and URL changes
+  useEffect(() => {
+    const pathSegments = location.pathname.split('/');
+    if (pathSegments.length > 2 && pathSegments[1] === 'card') {
+      const cardId = parseInt(pathSegments[2]);
+      const card = cards.find(c => c.id === cardId);
+      if (card) {
+        setSelectedCard(card);
+        setEditingCard(null);
+      }
+    } else if (location.pathname === '/') {
+      setSelectedCard(null);
+      setEditingCard(null);
+    }
+  }, [location.pathname, cards]);
 
   const handleImageClick = (imageSrc: string) => {
     setModalImageSrc(imageSrc);
